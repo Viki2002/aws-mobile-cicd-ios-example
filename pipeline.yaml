@@ -19,3 +19,102 @@ Resources:
       RepositoryDescription: Sample iOS Swift Application
       RepositoryName: !Ref CodeCommitRepoName
 
+  XCodeBuildAction:
+    Type: AWS::CodePipeline::CustomActionType
+    Properties:
+      Category: Build
+      InputArtifactDetails:
+        MaximumCount: 1
+        MinimumCount: 1
+      OutputArtifactDetails:
+        MaximumCount: 1
+        MinimumCount: 1
+      Provider: AppleXCode
+      Version: 1
+
+  CodePipelineServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "CodePipelinePolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Action:
+              - s3:Get*
+              - iam:PassRole
+              - codecommit:List*
+              - codecommit:GitPull
+              - codecommit:Get*
+              - codecommit:UploadArchive
+              - codecommit:GetUploadArchiveStatus
+              - codecommit:CancelUploadArchive
+              Resource: "*"
+              Effect: Allow
+            - Action:
+              - s3:PutObject
+              Resource:
+              - arn:aws:s3:::codepipeline*
+              - arn:aws:s3:::elasticbeanstalk*
+              Effect: Allow
+            - Action:
+              - codedeploy:CreateDeployment
+              - codedeploy:Get*
+              - codedeploy:RegisterApplicationRevision
+              Resource: "*"
+              Effect: Allow
+            - Action:
+              - elasticbeanstalk:CreateApplicationVersion
+              - elasticbeanstalk:Describe*
+              - elasticbeanstalk:UpdateEnvironment
+              - autoscaling:Describe*
+              - autoscaling:ResumeProcesses
+              - autoscaling:SuspendProcesses
+              - cloudformation:GetTemplate
+              - cloudformation:Describe*
+              - cloudformation:UpdateStack
+              - ec2:Describe*
+              - elasticloadbalancing:DescribeLoadBalancers
+              - rds:DescribeDBInstances
+              - rds:DescribeOrderableDBInstanceOptions
+              - sns:ListSubscriptionsByTopic
+              Resource: "*"
+              Effect: Allow
+            - Action:
+              - lambda:invokefunction
+              - lambda:listfunctions
+              Resource: "*"
+              Effect: Allow
+            - Action:
+                - cloudformation:CreateStack
+                - cloudformation:DeleteStack
+                - cloudformation:DescribeStacks
+                - cloudformation:UpdateStack
+                - cloudformation:CreateChangeSet
+                - cloudformation:DeleteChangeSet
+                - cloudformation:DescribeChangeSet
+                - cloudformation:ExecuteChangeSet
+                - cloudformation:SetStackPolicy
+                - cloudformation:ValidateTemplate
+              Resource: "*"
+              Effect: Allow
+            - Action:
+              - s3:ListBucket
+              - s3:GetBucketPolicy
+              - s3:GetObjectAcl
+              - s3:PutObjectAcl
+              - s3:DeleteObject
+              Resource: arn:aws:s3:::elasticbeanstalk*
+              Effect: Allow
+            Version: '2012-10-17'
