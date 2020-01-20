@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: iOS Swift CodePipeline Example
+
+Parameters:
+
+  SourceBranchName:
+    Type: String
+    Default: master
+  
+  CodeCommitRepoName:
+    Type: String
+    Default: ios-sample-repo
+
+Resources:
+
+  CodeRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryDescription: Sample iOS Swift Application
+      RepositoryName: !Ref CodeCommitRepoName
+
