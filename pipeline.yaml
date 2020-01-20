@@ -65,8 +65,7 @@ Resources:
             - Action:
               - s3:PutObject
               Resource:
-              - arn:aws:s3:::codepipeline*
-              - arn:aws:s3:::elasticbeanstalk*
+              - arn:aws:s3:::*
               Effect: Allow
             - Action:
               - codedeploy:CreateDeployment
@@ -118,3 +117,43 @@ Resources:
               Resource: arn:aws:s3:::elasticbeanstalk*
               Effect: Allow
             Version: '2012-10-17'
+
+  ArtifactStore:
+    Type: AWS::S3::Bucket
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactStore
+      RestartExecutionOnUpdate: true
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: SourceBundle
+              Configuration:
+                BranchName: !Ref SourceBranchName
+                RepositoryName: !Ref CodeCommitRepoName
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: !Ref XCodeBuildAction
+              ActionTypeId:
+                Owner: Custom
+                Category: Build
+                Version: "1"
+                Provider: AppleXCode
+              InputArtifacts:
+                - Name: SourceBundle
+              OutputArtifacts:
+                - Name: buildArtifact
+              RunOrder: 1
