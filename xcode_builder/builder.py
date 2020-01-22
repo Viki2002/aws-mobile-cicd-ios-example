@@ -7,9 +7,12 @@ import subprocess
 import os
 import glob
 import traceback
+import sys
+import time
 from os.path import basename
 
 cp = boto3.client('codepipeline')
+SLEEP_TIME = 15 # Number of seconds to sleep between each poll
 
 def handle_job(job):
 
@@ -43,6 +46,8 @@ def handle_job(job):
     os.chdir(build_dir)
     exit_code = subprocess.call(["make", "all"])
     os.chdir(pwd)
+    if exit_code != 0:
+        raise Exception("BUILD FAILED")
 
     # Find the IPA file
     ipa_file = glob.glob("%s/**/*.ipa" % (build_dir), recursive=True)
@@ -55,24 +60,9 @@ def handle_job(job):
     # Upload the IPA file
     output_artifact_s3_location = job['data']['outputArtifacts'][0]['location']['s3Location']
     s3.upload_file("%s/output.zip" % (build_dir), output_artifact_s3_location['bucketName'], output_artifact_s3_location['objectKey'])
-    
-    if exit_code == 0:
-        cp.put_job_success_result(
-            jobId = job['id']
-        )
-    else:
-        cp.put_job_failure_result(
-            jobId = job['id'],
-            failureDetails={
-                'type' : 'JobFailed',
-                'message' : 'BUILD FAILED'
-            }
-        )
-    
 
 
 def main():
-    print("---")
     while(True):
 
         # Poll for jobs
@@ -88,7 +78,7 @@ def main():
 
         for job in poll_result['jobs']:
             try:
-                print(job)
+                print("Processing job: %s" % (job['id']))
                 handle_job(job)
                 cp.put_job_success_result(
                     jobId = job['id']
@@ -101,9 +91,9 @@ def main():
                         'message' : 'BUILD FAILED'
                     }
                 )
-                traceback.print_exception(*exc_info)
+                traceback.print_exc(file=sys.stdout)
         
-        break
+        time.sleep(SLEEP_TIME)
 
 if __name__=="__main__":
     main()
