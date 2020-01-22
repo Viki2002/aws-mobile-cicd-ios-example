@@ -13,6 +13,8 @@
 		0168040E23D66464002891BE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0168040D23D66464002891BE /* Assets.xcassets */; };
 		0168041123D66464002891BE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0168041023D66464002891BE /* Preview Assets.xcassets */; };
 		0168041423D66464002891BE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0168041223D66464002891BE /* LaunchScreen.storyboard */; };
+		01F2CE0A23D7EA030032DA92 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01F2CE0923D7EA030032DA92 /* GameKit.framework */; };
+		01F2CE0E23D7EA7F0032DA92 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01F2CE0D23D7EA7F0032DA92 /* StoreKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +26,8 @@
 		0168041023D66464002891BE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		0168041323D66464002891BE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0168041523D66464002891BE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		01F2CE0923D7EA030032DA92 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
+		01F2CE0D23D7EA7F0032DA92 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,6 +35,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				01F2CE0A23D7EA030032DA92 /* GameKit.framework in Frameworks */,
+				01F2CE0E23D7EA7F0032DA92 /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -42,6 +48,7 @@
 			children = (
 				0168040623D66461002891BE /* SampleApp */,
 				0168040523D66461002891BE /* Products */,
+				01F2CE0823D7EA030032DA92 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -73,6 +80,15 @@
 				0168041023D66464002891BE /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		01F2CE0823D7EA030032DA92 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				01F2CE0D23D7EA7F0032DA92 /* StoreKit.framework */,
+				01F2CE0923D7EA030032DA92 /* GameKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -198,7 +214,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -259,7 +275,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;

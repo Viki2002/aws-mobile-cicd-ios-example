@@ -3,6 +3,11 @@
 import boto3
 import tempfile
 import zipfile
+import subprocess
+import os
+import glob
+import traceback
+from os.path import basename
 
 cp = boto3.client('codepipeline')
 
@@ -34,17 +39,40 @@ def handle_job(job):
         zr.extractall(build_dir)
     print(build_dir)
 
-    cp.put_job_failure_result(
-        jobId = job['id'],
-        failureDetails={
-            'type' : 'JobFailed',
-            'message' : 'BUILD FAILED'
-        }
-    )
+    pwd = os.getcwd()
+    os.chdir(build_dir)
+    exit_code = subprocess.call(["make", "all"])
+    os.chdir(pwd)
+
+    # Find the IPA file
+    ipa_file = glob.glob("%s/**/*.ipa" % (build_dir), recursive=True)
+
+    # Create zip file
+    zipf = zipfile.ZipFile("%s/output.zip" % (build_dir), 'w', zipfile.ZIP_DEFLATED)
+    zipf.write(ipa_file[0], basename(ipa_file[0]))
+    zipf.close()
+
+    # Upload the IPA file
+    output_artifact_s3_location = job['data']['outputArtifacts'][0]['location']['s3Location']
+    s3.upload_file("%s/output.zip" % (build_dir), output_artifact_s3_location['bucketName'], output_artifact_s3_location['objectKey'])
+    
+    if exit_code == 0:
+        cp.put_job_success_result(
+            jobId = job['id']
+        )
+    else:
+        cp.put_job_failure_result(
+            jobId = job['id'],
+            failureDetails={
+                'type' : 'JobFailed',
+                'message' : 'BUILD FAILED'
+            }
+        )
     
 
 
 def main():
+    print("---")
     while(True):
 
         # Poll for jobs
@@ -59,8 +87,21 @@ def main():
         )
 
         for job in poll_result['jobs']:
-            print(job)
-            handle_job(job)
+            try:
+                print(job)
+                handle_job(job)
+                cp.put_job_success_result(
+                    jobId = job['id']
+                )
+            except:
+                cp.put_job_failure_result(
+                    jobId = job['id'],
+                    failureDetails={
+                        'type' : 'JobFailed',
+                        'message' : 'BUILD FAILED'
+                    }
+                )
+                traceback.print_exception(*exc_info)
         
         break
 
