@@ -11,6 +11,10 @@ Parameters:
     Type: String
     Default: ios-sample-repo
 
+  DeviceFarmProjectName:
+    Type: String
+    Default: demo-app-devicefarm
+
 Resources:
 
   CodeRepo:
@@ -18,6 +22,109 @@ Resources:
     Properties:
       RepositoryDescription: Sample iOS Swift Application
       RepositoryName: !Ref CodeCommitRepoName
+  
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: ''
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: LambdaPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action: "devicefarm:*"
+            Resource: "*"
+            Effect: Allow
+          - Action: "logs:*"
+            Resource: "*"
+            Effect: Allow
+          - Action: "codepipeline:PutJob*"
+            Resource: "*"
+            Effect: Allow
+
+  DeviceFarmProjectFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: "Creates, updates, deletes Device Farm projects"
+      Handler: "index.handler"
+      Runtime: "python3.6"
+      Role: !GetAtt ["LambdaRole", "Arn"]
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import sys
+          import traceback
+          def handle_delete(df, event):
+            arn = event['PhysicalResourceId']
+            df.delete_project(
+              arn = arn
+            )
+            return arn
+          
+          def handle_update(df, event):
+            arn = event['PhysicalResourceId']
+            df.update_project(
+              arn = arn,
+              name = event['ResourceProperties']['ProjectName']
+            )
+            return arn
+          
+          def handle_create(df, event):
+            resp = df.create_project(
+              name = event['ResourceProperties']['ProjectName']
+            )
+            return resp['project']['arn']
+          
+          def get_top_device_pool(df, df_project_arn):
+            try:
+              resp = df.list_device_pools(
+                arn=df_project_arn,
+                type='CURATED'
+              )
+              pools = resp['devicePools']
+              for pool in pools:
+                if pool['name'] == 'Top Devices':
+                  return pool['arn']
+            except:
+              print("Unable to get device pools: ", sys.exc_info()[0])
+            
+            return None
+          def handler(event, context):
+            df = boto3.client('devicefarm', region_name='us-west-2')
+            project_arn = None
+            try:
+              if event['RequestType'] == 'Delete':
+                project_arn = handle_delete(df, event)
+              
+              if event['RequestType'] == 'Update':
+                project_arn = handle_update(df, event)
+              
+              if event['RequestType'] == 'Create':
+                project_arn = handle_create(df, event)
+              
+              device_pool_arn = get_top_device_pool(df, project_arn)
+              project_id = project_arn.split(':')[6]
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Arn' : project_arn, 'DevicePoolArn': device_pool_arn, 'ProjectId': project_id}, project_arn)
+            except:
+              print("Unexpected error:", sys.exc_info()[0])
+              traceback.print_exc()
+              cfnresponse.send(event, context, cfnresponse.FAILED, None, None)
+
+  DeviceFarmProject:
+    Type: Custom::DeviceFarmProject
+    Properties:
+      ServiceToken: !GetAtt DeviceFarmProjectFunction.Arn
+      ProjectName: !Ref DeviceFarmProjectName
 
   XCodeBuildAction:
     Type: AWS::CodePipeline::CustomActionType
@@ -116,6 +223,15 @@ Resources:
               - s3:DeleteObject
               Resource: arn:aws:s3:::elasticbeanstalk*
               Effect: Allow
+            - Action:
+              - devicefarm:ListProjects
+              - devicefarm:ListDevicePools
+              - devicefarm:GetRun
+              - devicefarm:GetUpload
+              - devicefarm:CreateUpload
+              - devicefarm:ScheduleRun
+              Resource: "*"
+              Effect: Allow
             Version: '2012-10-17'
 
   ArtifactStore:
@@ -155,5 +271,22 @@ Resources:
               InputArtifacts:
                 - Name: SourceBundle
               OutputArtifacts:
+                - Name: buildArtifact
+              RunOrder: 1
+        - Name: Test
+          Actions:
+            - Name: DeviceFarm
+              ActionTypeId:
+                Owner: AWS
+                Category: Test
+                Provider: DeviceFarm
+                Version: "1"
+              Configuration:
+                App: "SampleApp.ipa"
+                AppType: "iOS"
+                DevicePoolArn: !GetAtt DeviceFarmProject.DevicePoolArn
+                ProjectId: !GetAtt DeviceFarmProject.ProjectId
+                TestType: BUILTIN_FUZZ
+              InputArtifacts:
                 - Name: buildArtifact
               RunOrder: 1

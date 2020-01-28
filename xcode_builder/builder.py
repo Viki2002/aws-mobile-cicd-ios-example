@@ -34,13 +34,11 @@ def handle_job(job):
     input_artifact_s3_location = job['data']['inputArtifacts'][0]['location']['s3Location']
     _, input_artifact = tempfile.mkstemp()
     s3.download_file(input_artifact_s3_location['bucketName'], input_artifact_s3_location['objectKey'], input_artifact)
-    print(input_artifact)
 
     # Exctract the input artifact
     build_dir = tempfile.mkdtemp()
     with zipfile.ZipFile(input_artifact, 'r') as zr:
         zr.extractall(build_dir)
-    print(build_dir)
 
     pwd = os.getcwd()
     os.chdir(build_dir)
