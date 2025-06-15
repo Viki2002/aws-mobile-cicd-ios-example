@@ -18,13 +18,13 @@ phases:
   build:
     commands:
       - echo "Building IPA using Fastlane"
-      - fastlane build_ios   # Customize with your Fastlane lane name
+      - fastlane beta   # <-- changed from build_ios
 
   post_build:
     commands:
       - echo "Uploading IPA to S3"
-      - aws s3 cp ./build/ios/ipa/YourApp.ipa s3://boatcicd/releases/YourApp.ipa
+      - aws s3 cp $(find ./build/ios/ipa -name "*.ipa") s3://boatcicd/releases/
 
 artifacts:
   files:
-    - build/ios/ipa/YourApp.ipa
+    - build/ios/ipa/*.ipa   # <-- wildcard for flexibility
