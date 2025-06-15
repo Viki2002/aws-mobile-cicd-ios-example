@@ -2,32 +2,36 @@ version: 0.2
 
 phases:
   install:
+    runtime-versions:
+      java: corretto11
     commands:
-      - echo "Installing Fastlane…"
-      - gem install fastlane
-      - [ -f Gemfile ] && bundle install || echo "No Gemfile, skipping bundler"
-
+      - echo "Installing system dependencies"
+      - apt-get update
+      - apt-get install -y unzip curl
+      - echo "Downloading Android SDK command line tools"
+      - mkdir -p /opt/android-sdk
+      - cd /opt/android-sdk
+      - curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -o cmdline-tools.zip
+      - unzip -q cmdline-tools.zip
+      - mkdir -p cmdline-tools/latest
+      - mv cmdline-tools/* cmdline-tools/latest/
+      - export ANDROID_HOME=/opt/android-sdk
+      - export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+      - yes | sdkmanager --licenses
+      - sdkmanager "platforms;android-33" "build-tools;33.0.2"
   pre_build:
     commands:
-      - echo "Writing App·Store Connect key…"
-      - echo "$APPLE_API_KEY" > AuthKey_$APPLE_API_KEY_ID.p8
-      - export APP_STORE_CONNECT_KEY_ID=$APPLE_API_KEY_ID
-      - export APP_STORE_CONNECT_ISSUER_ID=$APPLE_API_ISSUER_ID
-      - export APP_STORE_CONNECT_KEY="./AuthKey_$APPLE_API_KEY_ID.p8"
-      - echo "Running match (read‑only)…"
-      - fastlane match development --readonly || echo "match skipped"
-
+      - echo "Pre-build: setting executable permission"
+      - cd android
+      - chmod +x ./gradlew
   build:
     commands:
-      - echo "Running Fastlane beta lane…"
-      - fastlane beta
-
+      - echo "Building release APK"
+      - ./gradlew assembleRelease
   post_build:
     commands:
-      - echo "Copying IPA to artifacts folder…"
-      - mkdir -p ios-build-output
-      - cp ./build/app.ipa ios-build-output/app.ipa
-
+      - echo "Uploading APK to S3"
+      - aws s3 cp app/build/outputs/apk/release/app-release.apk s3://boatcicd/releases/
 artifacts:
   files:
-    - ios-build-output/app.ipa
+    - android/app/build/outputs/apk/release/app-release.apk
