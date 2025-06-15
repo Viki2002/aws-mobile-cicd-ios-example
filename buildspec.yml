@@ -6,26 +6,26 @@ phases:
       ruby: 3.1
     commands:
       - echo "Installing Fastlane"
-      - gem install fastlane
+      - gem install fastlane --no-document
       - echo "Fastlane installed"
 
   pre_build:
     commands:
-      - echo "Checking project files"
+      - echo "Checking Fastlane and project files"
       - fastlane --version
       - ls -al
 
   build:
     commands:
       - echo "Building IPA using Fastlane"
-      - fastlane build_ios   # Customize with your Fastlane lane name
+      - fastlane beta   # Use the existing lane that builds IPA
 
   post_build:
     commands:
       - echo "Uploading IPA to S3"
-      - ls -a
-      - aws s3 cp ./build/ios/ipa/YourApp.ipa s3://boatcicd/releases/YourApp.ipa
+      - ls -al ./build/ios/ipa/
+      - aws s3 cp ./build/ios/ipa/*.ipa s3://boatcicd/releases/
 
 artifacts:
   files:
-    - build/ios/ipa/YourApp.ipa
+    - build/ios/ipa/*.ipa
