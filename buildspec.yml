@@ -3,35 +3,28 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: corretto11
+      ruby: 3.1
     commands:
-      - echo "Installing system dependencies"
-      - apt-get update
-      - apt-get install -y unzip curl
-      - echo "Downloading Android SDK command line tools"
-      - mkdir -p /opt/android-sdk
-      - cd /opt/android-sdk
-      - curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -o cmdline-tools.zip
-      - unzip -q cmdline-tools.zip
-      - mkdir -p cmdline-tools/latest
-      - mv cmdline-tools/* cmdline-tools/latest/
-      - export ANDROID_HOME=/opt/android-sdk
-      - export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-      - yes | sdkmanager --licenses
-      - sdkmanager "platforms;android-33" "build-tools;33.0.2"
+      - echo "Installing Fastlane"
+      - gem install fastlane
+      - echo "Fastlane installed"
+
   pre_build:
     commands:
-      - echo "Pre-build: setting executable permission"
-      - cd android
-      - chmod +x ./gradlew
+      - echo "Checking project files"
+      - fastlane --version
+      - ls -al
+
   build:
     commands:
-      - echo "Building release APK"
-      - ./gradlew assembleRelease
+      - echo "Building IPA using Fastlane"
+      - fastlane build_ios   # Customize with your Fastlane lane name
+
   post_build:
     commands:
-      - echo "Uploading APK to S3"
-      - aws s3 cp app/build/outputs/apk/release/app-release.apk s3://boatcicd/releases/
+      - echo "Uploading IPA to S3"
+      - aws s3 cp ./build/ios/ipa/YourApp.ipa s3://boatcicd/releases/YourApp.ipa
+
 artifacts:
   files:
-    - android/app/build/outputs/apk/release/app-release.apk
+    - build/ios/ipa/YourApp.ipa
