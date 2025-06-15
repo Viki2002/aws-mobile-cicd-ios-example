@@ -13,20 +13,29 @@ phases:
     runtime-versions:
       ruby: 3.2
     commands:
-      - echo Installing dependencies...
+      - echo Installing Ruby dependencies...
       - gem install bundler
       - bundle install
+
   pre_build:
     commands:
-      - echo Pre-build phase...
-      - bundle exec fastlane match development --readonly
+      - echo "Setting up Apple API key..."
+      - echo "$APPLE_API_KEY" > AuthKey_$APPLE_API_KEY_ID.p8
+      - export APP_STORE_CONNECT_KEY_ID=$APPLE_API_KEY_ID
+      - export APP_STORE_CONNECT_ISSUER_ID=$APPLE_API_ISSUER_ID
+      - export APP_STORE_CONNECT_KEY="./AuthKey_$APPLE_API_KEY_ID.p8"
+      # Optional: Only if you're using match for provisioning profiles
+      - echo "Running Fastlane match (if applicable)..."
+      - bundle exec fastlane match development --readonly || echo "Match skipped or failed, continuing..."
+
   build:
     commands:
-      - echo Building the iOS app...
+      - echo "Running Fastlane build..."
       - bundle exec fastlane build
+
   post_build:
     commands:
-      - echo Build completed.
+      - echo "Copying output IPA..."
       - mkdir -p ios-build-output
       - cp ./build/app.ipa ios-build-output/app.ipa
 
