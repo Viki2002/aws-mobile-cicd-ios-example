@@ -15,3 +15,4 @@ phases:
 artifacts:
   files:
     - build/sample_app.ipa
+     discard-paths: yes
