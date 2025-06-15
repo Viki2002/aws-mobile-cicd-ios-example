@@ -23,6 +23,7 @@ phases:
   post_build:
     commands:
       - echo "Uploading IPA to S3"
+      - ls -a
       - aws s3 cp ./build/ios/ipa/YourApp.ipa s3://boatcicd/releases/YourApp.ipa
 
 artifacts:
