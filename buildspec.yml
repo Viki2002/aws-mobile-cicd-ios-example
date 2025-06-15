@@ -2,15 +2,16 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      ruby: 2.7
     commands:
-      - gem install bundler
-      - bundle install || bundle init && bundle add fastlane
+      - echo "Installing Bundler and Fastlane..."
+      - '[ -f Gemfile ] || (bundle init && bundle add fastlane)'
+      - bundle install
   build:
     commands:
+      - echo "Running Fastlane build..."
       - bundle exec fastlane beta
-      - aws s3 cp ./build/sample_app.ipa s3://your-s3-bucket-name/
+      - echo "Uploading IPA to S3..."
+      - aws s3 cp ./build/sample_app.ipa s3://boatcicd/
 artifacts:
   files:
     - build/sample_app.ipa
