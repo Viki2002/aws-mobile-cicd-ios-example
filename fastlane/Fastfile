@@ -1,9 +1,13 @@
 default_platform(:ios)
 
 platform :ios do
-  desc "Build and upload to TestFlight"
+  desc "Build and upload IPA"
   lane :beta do
-    build_app(scheme: "sample_app")
-    upload_to_testflight
+    build_app(
+      scheme: "YourAppScheme",          # Replace with your actual scheme
+      export_method: "ad-hoc",          # Use 'app-store' or 'development' as needed
+      output_directory: "./build/ios/ipa",
+      output_name: "YourApp.ipa"        # Optional: to control output name
+    )
   end
 end
