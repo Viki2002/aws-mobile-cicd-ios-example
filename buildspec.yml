@@ -1,24 +1,15 @@
 version: 0.2
 
-env:
-  secrets-manager:
-    APPLE_API_KEY: "ios/appstore/credentials:APPLE_API_KEY"
-    APPLE_API_ISSUER_ID: "ios/appstore/credentials:APPLE_API_ISSUER_ID"
-    APPLE_API_KEY_ID: "ios/appstore/credentials:APPLE_API_KEY_ID"
-
 phases:
   install:
-    runtime-versions:
-      ruby: 3.2        # this message is harmless on AL2 images
     commands:
       - echo "Installing Fastlane…"
-      - gem install fastlane        # <─ direct install
-      # Run bundler only if Gemfile exists
-      - '[ -f Gemfile ] && bundle install || echo "No Gemfile, skipping bundler"'
+      - gem install fastlane
+      - [ -f Gemfile ] && bundle install || echo "No Gemfile, skipping bundler"
 
   pre_build:
     commands:
-      - echo "Writing App Store Connect key…"
+      - echo "Writing App·Store Connect key…"
       - echo "$APPLE_API_KEY" > AuthKey_$APPLE_API_KEY_ID.p8
       - export APP_STORE_CONNECT_KEY_ID=$APPLE_API_KEY_ID
       - export APP_STORE_CONNECT_ISSUER_ID=$APPLE_API_ISSUER_ID
@@ -28,8 +19,8 @@ phases:
 
   build:
     commands:
-      - echo "Running Fastlane build…"
-      - fastlane build               # must exist in your Fastfile
+      - echo "Running Fastlane beta lane…"
+      - fastlane beta
 
   post_build:
     commands:
@@ -39,6 +30,4 @@ phases:
 
 artifacts:
   files:
-    - app.ipa
-  base-directory: ios-build-output
-  name: app
+    - ios-build-output/app.ipa
