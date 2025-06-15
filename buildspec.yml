@@ -1,18 +1,37 @@
 version: 0.2
 
+env:
+  secrets-manager:
+    APPLE_API_KEY: "ios/appstore/credentials:APPLE_API_KEY"
+    APPLE_API_ISSUER_ID: "ios/appstore/credentials:APPLE_API_ISSUER_ID"
+    APPLE_API_KEY_ID: "ios/appstore/credentials:APPLE_API_KEY_ID"
+  variables:
+    LANG: en_US.UTF-8
+
 phases:
   install:
+    runtime-versions:
+      ruby: 3.2
     commands:
-      - echo "Installing Bundler and Fastlane..."
-      - '[ -f Gemfile ] || (bundle init && bundle add fastlane)'
+      - echo Installing dependencies...
+      - gem install bundler
       - bundle install
+  pre_build:
+    commands:
+      - echo Pre-build phase...
+      - bundle exec fastlane match development --readonly
   build:
     commands:
-      - echo "Running Fastlane build..."
-      - bundle exec fastlane beta
-      - echo "Uploading IPA to S3..."
-      - aws s3 cp ./build/sample_app.ipa s3://boatcicd/
+      - echo Building the iOS app...
+      - bundle exec fastlane build
+  post_build:
+    commands:
+      - echo Build completed.
+      - mkdir -p ios-build-output
+      - cp ./build/app.ipa ios-build-output/app.ipa
+
 artifacts:
   files:
-    - build/sample_app.ipa
-     discard-paths: yes
+    - app.ipa
+  base-directory: ios-build-output
+  name: app.ipa
