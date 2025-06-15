@@ -6,25 +6,30 @@ phases:
       ruby: 3.1
     commands:
       - echo "Installing Fastlane"
-      - gem install fastlane
+      - gem install fastlane --no-document
       - echo "Fastlane installed"
 
   pre_build:
     commands:
-      - echo "Checking project files"
+      - echo "Checking Fastlane and project structure"
       - fastlane --version
-      - ls -al
+      - ls -R
 
   build:
     commands:
-      - echo "Building IPA using Fastlane"
-      - fastlane beta   # <-- changed from build_ios
+      - echo "Running Fastlane lane: beta"
+      - fastlane beta   # Replace with your actual lane if named differently
 
   post_build:
     commands:
-      - echo "Uploading IPA to S3"
-      - aws s3 cp $(find ./build/ios/ipa -name "*.ipa") s3://boatcicd/releases/
+      - echo "Uploading IPA(s) to S3"
+      - ls ./build/ios/ipa/
+      - for file in $(find ./build/ios/ipa -name "*.ipa"); do
+            echo "Uploading $file to S3";
+            aws s3 cp "$file" "s3://boatcicd/releases/$(basename $file)";
+        done
 
 artifacts:
   files:
-    - build/ios/ipa/*.ipa   # <-- wildcard for flexibility
+    - build/ios/ipa/**/*.ipa
+  discard-paths: yes
